@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الإعدادات</title>
+    
+
+    <link rel="stylesheet" href="https://jsdelivr.net">
+    
+
+    <link rel="stylesheet" href="../Task_Bootstrap/contact.html">
+</head>
+<body class="bg-light text-secondary p-4">
+
+
+    <header class="bg-gradient bg-primary text-white text-center p-4 rounded-3 mb-4 shadow-sm">
+        <h1 class="h3 mb-3 fw-bold">إعدادات الحساب</h1>
+        <nav>
+            <a href="../Task_Bootstrap/index.html" class="btn btn-light btn-sm text-primary fw-medium px-4">الصفحة الرئيسية</a>
+        </nav>
+    </header>
+
+
+    <main class="container" style="max-width: 800px;">
+
+        <section class="bg-white p-4 rounded-3 mb-4 border shadow-sm">
+            <h2 class="h4 text-primary pb-2 mb-4 border-bottom fw-bold">تفضيلات المستخدم</h2>
+            <form>
+
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-dark">اللغة المفضلة:</label>
+                    <select class="form-select">
+                        <option selected>العربية</option>
+                        <option>English</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-dark d-block">تفعيل الإشعارات:</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                        <label class="form-check-label text-dark" for="emailNotif">بريد إلكتروني</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="smsNotif">
+                        <label class="form-check-label text-dark" for="smsNotif">رسائل نصية</label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-dark d-block">اختيار المظهر:</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="theme" id="lightTheme" checked>
+                        <label class="form-check-label text-dark" for="lightTheme">فاتح</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="theme" id="darkTheme">
+                        <label class="form-check-label text-dark" for="darkTheme">داكن</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-medium shadow-sm">حفظ الإعدادات</button>
+            </form>
+        </section>
+        
+    </main>
+
+    <footer class="text-center text-muted mt-5 pt-3 border-top fs-7">
+        <p>© 2025 إعدادات الحساب - جميع الحقوق محفوظة</p>
+    </footer>
+
+    <script src="https://jsdelivr.net"></script>
+</body>
+</html>
