@@ -1,7 +1,18 @@
+using BootCamp_MVC_EF.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+
+var conectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+options.UseSqlServer(conectionString));
+
+
 
 var app = builder.Build();
 

@@ -4,18 +4,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BootCamp_MVC_EF.Controllers
 {
-    public class CustomerController : Controller
+    public class SuppliersController : Controller
     {
         private readonly AppDbContext _db;
-        public CustomerController(AppDbContext db)
+        public SuppliersController(AppDbContext db)
         {
             _db = db;
         }
 
         public ActionResult Index()
         {
-            IEnumerable<Customer> customers = _db.Customers.ToList();
-            return View(customers);
+            IEnumerable<Supplier> suppliers = _db.Suppliers.ToList();
+            return View(suppliers);
         }
 
         [HttpGet]
@@ -25,60 +25,64 @@ namespace BootCamp_MVC_EF.Controllers
         }
 
         [HttpPost]
-        public ActionResult Create(Customer customer)
+        public ActionResult Create(Supplier supplier)
         {
             if (ModelState.IsValid)
             {
-                _db.Customers.Add(customer);
+                _db.Suppliers.Add(supplier);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
             ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(customer);
+            return View(supplier);
         }
-        //Edit--------------------------------------------------------------------------------------------------------------------------
+
+        //Edit---------------------------------------------------------------------------------------------
+
         [HttpGet]
         public ActionResult Edit(int Id)
         {
-            var customer = _db.Customers.Find(Id);
-            if (customer == null)
+            var supplier = _db.Suppliers.Find(Id);
+            if (supplier == null)
             {
                 return NotFound();
             }
-            return View(customer);
+            return View(supplier);
         }
 
         [HttpPost]
-        public ActionResult Edit(Customer customer)
+        public ActionResult Edit(Supplier supplier)
         {
             if (ModelState.IsValid)
             {
-                _db.Customers.Update(customer);
+                _db.Suppliers.Update(supplier);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
             ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(customer);
+            return View(supplier);
         }
-        //Delete---------------------------------------------------------------------------------------------------------------------------------
+
+        //Delete------------------------------------------------------------------------------------------
 
         [HttpGet]
         public ActionResult Delete(int Id)
         {
-            var customer = _db.Customers.Find(Id);
-            if (customer == null)
+            var supplier = _db.Suppliers.Find(Id);
+            if (supplier == null)
             {
                 return NotFound();
             }
-            return View(customer);
+            return View(supplier);
         }
 
         [HttpPost]
-        public ActionResult Delete(Customer customer)
+        public ActionResult Delete(Supplier supplier)
         {
-            _db.Customers.Remove(customer);
+            _db.Suppliers.Remove(supplier);
             _db.SaveChanges();
             return RedirectToAction("Index");
         }
     }
 }
+

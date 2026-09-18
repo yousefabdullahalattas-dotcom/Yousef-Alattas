@@ -1,0 +1,32 @@
+﻿@model Customer
+@{
+    ViewData["Title"] = "Delete Customer";
+}
+<div class="container">
+    <h1>Delete Customer</h1>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="form-group">
+            <label asp-for="CustomerName" class="control-label"></label>
+            <input asp-for="CustomerName" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="Phone" class="control-label"></label>
+            <input asp-for="Phone" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="Address" class="control-label"></label>
+            <input asp-for="Address" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <label asp-for="CustomerType" class="control-label"></label>
+            <input asp-for="CustomerType" class="form-control" readonly />
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Delete" class="btn btn-danger" />
+        </div>
+    </form>
+    <div>
+        <a asp-action="Index">Back to List</a>
+    </div>
+</div>
