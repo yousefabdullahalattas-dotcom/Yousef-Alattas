@@ -1,9 +1,11 @@
 ﻿using BootCamp_MVC_EF.Data;
 using BootCamp_MVC_EF.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BootCamp_MVC_EF.Controllers
 {
+    [Authorize]
     public class SuppliersController : Controller
     {
         private readonly AppDbContext _db;
