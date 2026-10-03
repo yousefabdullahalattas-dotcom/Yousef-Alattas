@@ -14,5 +14,6 @@ namespace BootCamp_MVC_EF.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Order> Orders { get; set; }
     }
 }

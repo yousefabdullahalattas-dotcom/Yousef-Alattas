@@ -20,8 +20,11 @@ namespace BootCamp_MVC_EF.Models
 
         [Required(ErrorMessage = "Price is required")]
         public decimal Price { get; set; }
+
         public int StockQuantity { get; set; } = 0;
 
+        [Required(ErrorMessage = "Supplier is required")]
+        public int SupplierId { get; set; }
+        public Supplier Supplier { get; set; }
     }
 }
-

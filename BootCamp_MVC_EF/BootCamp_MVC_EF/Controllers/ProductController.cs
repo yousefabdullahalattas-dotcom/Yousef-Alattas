@@ -2,6 +2,7 @@
 using BootCamp_MVC_EF.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BootCamp_MVC_EF.Controllers
 {
@@ -23,24 +24,28 @@ namespace BootCamp_MVC_EF.Controllers
         [HttpGet]
         public ActionResult Create()
         {
+            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
             return View();
         }
 
         [HttpPost]
         public ActionResult Create(Product product)
         {
+            ModelState.Remove("Supplier");
+
             if (ModelState.IsValid)
             {
                 _db.Products.Add(product);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
+
+            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
             ModelState.AddModelError("", "Please fill all the required fields.");
             return View(product);
         }
 
-
-        //Edit-----------------------------------------------------------------------------------
+        //Edit--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         [HttpGet]
         public ActionResult Edit(int Id)
         {
@@ -49,23 +54,28 @@ namespace BootCamp_MVC_EF.Controllers
             {
                 return NotFound();
             }
+            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
             return View(product);
         }
 
         [HttpPost]
         public ActionResult Edit(Product product)
         {
+            ModelState.Remove("Supplier");
+
             if (ModelState.IsValid)
             {
                 _db.Products.Update(product);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
+
+            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
             ModelState.AddModelError("", "Please fill all the required fields.");
             return View(product);
         }
 
-        //Delete-------------------------------------------------------------------------------------
+        //Delete--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         [HttpGet]
         public ActionResult Delete(int Id)
         {

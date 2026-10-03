@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Order>
+<div class="container">
+    <h1>Orders</h1>
+    <div class="text-end">
+        <a asp-action="Create" class="btn btn-primary"> New Order </a>
+    </div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Order Date</th>
+                <th>Total Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Customer?.CustomerName</td>
+                    <td>@item.Product?.ProductName</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.OrderDate.ToShortDateString()</td>
+                    <td>@item.TotalPrice</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-Id="@item.Id" class="btn btn-warning"> Edit  </a>
+                        <a asp-action="Delete" asp-route-Id="@item.Id" class="btn btn-danger"> Delete  </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

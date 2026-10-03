@@ -1,0 +1,50 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Create Order";
+}
+<div class="container">
+    <h1>Create Order</h1>
+    <form asp-action="Create" method="post">
+        <div class="text-danger" asp-validation-summary="All"></div>
+
+        <div class="form-group">
+            <label>Customer</label>
+            <select asp-for="CustomerId" class="form-control" asp-items="ViewBag.CustomerList">
+                <option value="">-- اختر العميل --</option>
+            </select>
+            <span class="text-danger" asp-validation-for="CustomerId"></span>
+        </div>
+
+        <div class="form-group">
+            <label>Product</label>
+            <select asp-for="ProductId" class="form-control" asp-items="ViewBag.ProductList">
+                <option value="">-- اختر المنتج --</option>
+            </select>
+            <span class="text-danger" asp-validation-for="ProductId"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Quantity" class="control-label"></label>
+            <input asp-for="Quantity" class="form-control" />
+            <span class="text-danger" asp-validation-for="Quantity"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="OrderDate" class="control-label"></label>
+            <input asp-for="OrderDate" class="form-control" type="date" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="TotalPrice" class="control-label"></label>
+            <input asp-for="TotalPrice" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <input type="submit" value="Create" class="btn btn-primary" />
+        </div>
+    </form>
+    <div><a asp-action="Index">Back to List</a></div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
