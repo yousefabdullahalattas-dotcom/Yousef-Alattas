@@ -19,6 +19,6 @@ namespace BootCamp_MVC_EF.Models
         [Required(ErrorMessage = "Phone is required")]
         public string Phone { get; set; }
 
-        public ICollection<Product> Products { get; set; } = new List<Product>();
+        public ICollection<Product> Products { get; set; } 
     }
 }
