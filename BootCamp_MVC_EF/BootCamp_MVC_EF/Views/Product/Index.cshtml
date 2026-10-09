@@ -1,11 +1,15 @@
-﻿@model IEnumerable<Product>
+﻿@using BootCamp_MVC_EF.Dtos
+@model IEnumerable<ProductDto>
 @{
     ViewData["Title"] = "Products Page";
 }
+
 <div class="container">
-    <h1>المنتجات</h1>
+
+    <h1>Products</h1>
+
     <div class="text-end">
-        <a asp-action="Create" class="btn btn-primary"> New Product </a>
+        <a asp-action="Create" class="btn btn-primary"> New </a>
     </div>
     <table class="table table-striped">
         <thead>
@@ -16,12 +20,14 @@
                 <th>Power (Watt)</th>
                 <th>Price</th>
                 <th>Stock</th>
-                <th>Action</th>
+                <th>Supplier</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in Model)
             {
+
                 <tr>
                     <td>@item.Id</td>
                     <td>@item.ProductName</td>
@@ -29,12 +35,17 @@
                     <td>@item.PowerWatt</td>
                     <td>@item.Price</td>
                     <td>@item.StockQuantity</td>
+                    <td>@item.SupplierName</td>
                     <td>
-                        <a asp-action="Edit" asp-route-Id="@item.Id" class="btn btn-warning"> Edit  </a>
-                        <a asp-action="Delete" asp-route-Id="@item.Id" class="btn btn-danger"> Delete  </a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
                     </td>
                 </tr>
+
             }
+
+
         </tbody>
+
     </table>
 </div>

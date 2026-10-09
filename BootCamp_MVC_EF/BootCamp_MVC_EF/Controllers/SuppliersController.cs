@@ -1,50 +1,50 @@
-﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Models;
+using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
     [Authorize]
     public class SuppliersController : Controller
     {
-        private readonly AppDbContext _db;
-        public SuppliersController(AppDbContext db)
+        private readonly ISupplierRepository _supplierRepository;
+
+        public SuppliersController(ISupplierRepository supplierRepository)
         {
-            _db = db;
+            _supplierRepository = supplierRepository;
         }
 
-        public ActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<Supplier> suppliers = _db.Suppliers.ToList();
-            return View(suppliers);
+            return View(await _supplierRepository.GetAllSuppliersAsync());
         }
 
-        [HttpGet]
-        public ActionResult Create()
+        public IActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
-        public ActionResult Create(Supplier supplier)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,SupplierName,MaterialType,Phone,Products")] Supplier supplier)
         {
             if (ModelState.IsValid)
             {
-                _db.Suppliers.Add(supplier);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                await _supplierRepository.AddSupplierAsync(supplier);
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(supplier);
         }
 
-        //Edit---------------------------------------------------------------------------------------------
-
-        [HttpGet]
-        public ActionResult Edit(int Id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            var supplier = _db.Suppliers.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
             if (supplier == null)
             {
                 return NotFound();
@@ -53,38 +53,57 @@ namespace BootCamp_MVC_EF.Controllers
         }
 
         [HttpPost]
-        public ActionResult Edit(Supplier supplier)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, [Bind("Id,SupplierName,MaterialType,Phone,Products")] Supplier supplier)
         {
+            if (id != supplier.Id)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
-                _db.Suppliers.Update(supplier);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                try
+                {
+                    await _supplierRepository.UpdateSupplierAsync(supplier);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+
+                }
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(supplier);
         }
 
-        //Delete------------------------------------------------------------------------------------------
-
-        [HttpGet]
-        public ActionResult Delete(int Id)
+        // GET: SUPPLIERS/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            var supplier = _db.Suppliers.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
             if (supplier == null)
             {
                 return NotFound();
             }
+
             return View(supplier);
         }
 
-        [HttpPost]
-        public ActionResult Delete(Supplier supplier)
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int? id)
         {
-            _db.Suppliers.Remove(supplier);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
+            if (supplier != null)
+            {
+                await _supplierRepository.DeleteSupplierAsync(supplier.Id);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
+
     }
 }
-

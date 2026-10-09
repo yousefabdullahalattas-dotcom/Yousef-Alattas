@@ -2,6 +2,7 @@ using BootCamp_MVC_EF.Data;
 using BootCamp_MVC_EF.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using BootCamp_MVC_EF.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Account/AccessDenied";
     });
 
-
+builder.Services.AddScoped<ISupplierRepository, SupplierRepository>();
 
 
 var app = builder.Build();

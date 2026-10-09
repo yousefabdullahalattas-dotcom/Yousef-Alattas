@@ -1,4 +1,5 @@
 ﻿using BootCamp_MVC_EF.Data;
+using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,90 +10,184 @@ namespace BootCamp_MVC_EF.Controllers
     [Authorize]
     public class ProductController : Controller
     {
+        //DI
         private readonly AppDbContext _db;
         public ProductController(AppDbContext db)
         {
             _db = db;
         }
 
+
         public ActionResult Index()
         {
-            IEnumerable<Product> products = _db.Products.ToList();
+            //Entity Framework Approach
+
+            IEnumerable<ProductDto> products = _db.Products.Select(p => new ProductDto
+            {
+                //Mapping the properties of Product to ProductDto
+                Id = p.Id,
+                ProductName = p.ProductName,
+                Type = p.Type,
+                PowerWatt = p.PowerWatt,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                SupplierName = p.Supplier != null ? p.Supplier.SupplierName : null
+            }).ToList();
+
             return View(products);
         }
 
-        [HttpGet]
+
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            loadSuppliers();
+            var product = _db.Products.Find(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            //Mapping the properties of Product to ProductUpdateDto
+            var productDTO = new ProductUpdateDto
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                Type = product.Type,
+                PowerWatt = product.PowerWatt,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                SupplierId = product.SupplierId
+            };
+
+            return View(productDTO);
+        }
+
+        [HttpPost]
+        public ActionResult Edit(ProductUpdateDto productDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                var product = _db.Products.Find(productDTO.Id);
+                if (product == null)
+                {
+                    return NotFound();
+                }
+
+                //Mapping the properties of ProductUpdateDto to Product
+                product.ProductName = productDTO.ProductName;
+                product.Type = productDTO.Type;
+                product.PowerWatt = productDTO.PowerWatt;
+                product.Price = productDTO.Price;
+                product.StockQuantity = productDTO.StockQuantity;
+                product.SupplierId = productDTO.SupplierId;
+
+                //  _db.Products.Update(product);
+                _db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            loadSuppliers();
+            return View(productDTO);
+
+        }
+
+
+        private void loadSuppliers()
+        {
+            var suppliers = _db.Suppliers.ToList();
+            ViewBag.Suppliers = new SelectList(suppliers, "Id", "SupplierName");
+        }
+
+
         public ActionResult Create()
         {
-            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
+            loadSuppliers();
+
             return View();
         }
 
         [HttpPost]
-        public ActionResult Create(Product product)
+        public ActionResult Create(ProductCreateDto productDTO)
         {
-            ModelState.Remove("Supplier");
-
             if (ModelState.IsValid)
             {
+
+                //Mapping the properties of ProductCreateDto to Product
+                var product = new Product
+                {
+                    ProductName = productDTO.ProductName,
+                    Type = productDTO.Type,
+                    PowerWatt = productDTO.PowerWatt,
+                    Price = productDTO.Price,
+                    StockQuantity = productDTO.StockQuantity,
+                    SupplierId = productDTO.SupplierId
+                };
+
                 _db.Products.Add(product);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
-
-            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
             ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(product);
+            loadSuppliers();
+            return View(productDTO);
+
         }
 
-        //Edit--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Edit(int Id)
+
+
+        public ActionResult Delete(int? id)
         {
-            var product = _db.Products.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = _db.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
             }
-            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
-            return View(product);
+
+            //Mapping the properties of Product to ProductUpdateDto
+            var productDTO = new ProductUpdateDto
+            {
+                Id = product.Id,
+                ProductName = product.ProductName,
+                Type = product.Type,
+                PowerWatt = product.PowerWatt,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                SupplierId = product.SupplierId
+            };
+
+            return View(productDTO);
         }
 
         [HttpPost]
-        public ActionResult Edit(Product product)
+        [ActionName("Delete")]
+        public ActionResult DeleteConfirm(int? id)
         {
-            ModelState.Remove("Supplier");
-
-            if (ModelState.IsValid)
+            if (id == null)
             {
-                _db.Products.Update(product);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                return NotFound();
             }
 
-            ViewBag.SupplierList = new SelectList(_db.Suppliers.ToList(), "Id", "SupplierName");
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(product);
-        }
-
-        //Delete--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Delete(int Id)
-        {
-            var product = _db.Products.Find(Id);
+            var product = _db.Products.Find(id);
             if (product == null)
             {
                 return NotFound();
             }
-            return View(product);
-        }
 
-        [HttpPost]
-        public ActionResult Delete(Product product)
-        {
             _db.Products.Remove(product);
             _db.SaveChanges();
+
             return RedirectToAction("Index");
         }
+
     }
 }
