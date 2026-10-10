@@ -1,50 +1,70 @@
-﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Models;
+using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
     [Authorize]
     public class EmployeesController : Controller
     {
-        private readonly AppDbContext _db;
-        public EmployeesController(AppDbContext db)
+        private readonly IEmployeeRepository _employeeRepository;
+
+        public EmployeesController(IEmployeeRepository employeeRepository)
         {
-            _db = db;
+            _employeeRepository = employeeRepository;
         }
 
-        public ActionResult Index()
+
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<Employee> employees = _db.Employees.ToList();
-            return View(employees);
+            return View(await _employeeRepository.GetAllEmployeesAsync());
         }
 
-        [HttpGet]
-        public ActionResult Create()
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
+            return View(employee);
+        }
+
+
+        public IActionResult Create()
         {
             return View();
         }
 
+
         [HttpPost]
-        public ActionResult Create(Employee employee)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,EmployeeName,Position,Department,Salary")] Employee employee)
         {
             if (ModelState.IsValid)
             {
-                _db.Employees.Add(employee);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                await _employeeRepository.AddEmployeeAsync(employee);
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(employee);
         }
 
-        //Edit------------------------------------------------------------------------------------------
-
-        [HttpGet]
-        public ActionResult Edit(int Id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            var employee = _db.Employees.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
             if (employee == null)
             {
                 return NotFound();
@@ -53,42 +73,58 @@ namespace BootCamp_MVC_EF.Controllers
         }
 
         [HttpPost]
-        public ActionResult Edit(Employee employee)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, [Bind("Id,EmployeeName,Position,Department,Salary")] Employee employee)
         {
+            if (id != employee.Id)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
-                _db.Employees.Update(employee);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                try
+                {
+                    await _employeeRepository.UpdateEmployeeAsync(employee);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+
+                }
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(employee);
         }
 
 
-        //Delete-----------------------------------------------------------------------------------------
-
-        [HttpGet]
-        public ActionResult Delete(int Id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            var employee = _db.Employees.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
             if (employee == null)
             {
                 return NotFound();
             }
+
             return View(employee);
         }
 
-        [HttpPost]
-        public ActionResult Delete(Employee employee)
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int? id)
         {
-            _db.Employees.Remove(employee);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(id.Value);
+            if (employee != null)
+            {
+                await _employeeRepository.DeleteEmployeeAsync(employee.Id);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
     }
-
-
-
 }

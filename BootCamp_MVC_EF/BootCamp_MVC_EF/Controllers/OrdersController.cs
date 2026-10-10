@@ -1,112 +1,199 @@
 ﻿using BootCamp_MVC_EF.Data;
+using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
     [Authorize]
     public class OrdersController : Controller
     {
+
         private readonly AppDbContext _db;
         public OrdersController(AppDbContext db)
         {
             _db = db;
         }
 
+
         public ActionResult Index()
         {
-            IEnumerable<Order> orders = _db.Orders
-                .Include(x => x.Customer)
-                .Include(x => x.Product)
-                .ToList();
+
+
+            IEnumerable<OrderDto> orders = _db.Orders.Select(o => new OrderDto
+            {
+
+                Id = o.Id,
+                CustomerName = o.Customer != null ? o.Customer.CustomerName : null,
+                ProductName = o.Product != null ? o.Product.ProductName : null,
+                Quantity = o.Quantity,
+                OrderDate = o.OrderDate,
+                TotalPrice = o.TotalPrice
+            }).ToList();
+
             return View(orders);
         }
 
-        [HttpGet]
+
+        public ActionResult Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            loadCustomers();
+            loadProducts();
+            var order = _db.Orders.Find(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+
+            var orderDTO = new OrderUpdateDto
+            {
+                Id = order.Id,
+                CustomerId = order.CustomerId,
+                ProductId = order.ProductId,
+                Quantity = order.Quantity,
+                OrderDate = order.OrderDate,
+                TotalPrice = order.TotalPrice
+            };
+
+            return View(orderDTO);
+        }
+
+        [HttpPost]
+        public ActionResult Edit(OrderUpdateDto orderDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                var order = _db.Orders.Find(orderDTO.Id);
+                if (order == null)
+                {
+                    return NotFound();
+                }
+
+
+                order.CustomerId = orderDTO.CustomerId;
+                order.ProductId = orderDTO.ProductId;
+                order.Quantity = orderDTO.Quantity;
+                order.OrderDate = orderDTO.OrderDate;
+                order.TotalPrice = orderDTO.TotalPrice;
+
+
+                _db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            loadCustomers();
+            loadProducts();
+            return View(orderDTO);
+
+        }
+
+
+        private void loadCustomers()
+        {
+            var customers = _db.Customers.ToList();
+            ViewBag.Customers = new SelectList(customers, "Id", "CustomerName");
+        }
+
+
+        private void loadProducts()
+        {
+            var products = _db.Products.ToList();
+            ViewBag.Products = new SelectList(products, "Id", "ProductName");
+        }
+
+
         public ActionResult Create()
         {
-            ViewBag.CustomerList = new SelectList(_db.Customers.ToList(), "Id", "CustomerName");
-            ViewBag.ProductList = new SelectList(_db.Products.ToList(), "Id", "ProductName");
+            loadCustomers();
+            loadProducts();
+
             return View();
         }
 
         [HttpPost]
-        public ActionResult Create(Order order)
+        public ActionResult Create(OrderCreateDto orderDTO)
         {
-            ModelState.Remove("Customer");
-            ModelState.Remove("Product");
-
             if (ModelState.IsValid)
             {
+
+
+                var order = new Order
+                {
+                    CustomerId = orderDTO.CustomerId,
+                    ProductId = orderDTO.ProductId,
+                    Quantity = orderDTO.Quantity,
+                    OrderDate = orderDTO.OrderDate,
+                    TotalPrice = orderDTO.TotalPrice
+                };
+
                 _db.Orders.Add(order);
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
-
-            ViewBag.CustomerList = new SelectList(_db.Customers.ToList(), "Id", "CustomerName");
-            ViewBag.ProductList = new SelectList(_db.Products.ToList(), "Id", "ProductName");
             ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(order);
+            loadCustomers();
+            loadProducts();
+            return View(orderDTO);
+
         }
 
-        //Edit---------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Edit(int Id)
+
+
+        public ActionResult Delete(int? id)
         {
-            var order = _db.Orders.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var order = _db.Orders.Find(id);
             if (order == null)
             {
                 return NotFound();
             }
-            ViewBag.CustomerList = new SelectList(_db.Customers.ToList(), "Id", "CustomerName");
-            ViewBag.ProductList = new SelectList(_db.Products.ToList(), "Id", "ProductName");
-            return View(order);
+
+
+            var orderDTO = new OrderUpdateDto
+            {
+                Id = order.Id,
+                CustomerId = order.CustomerId,
+                ProductId = order.ProductId,
+                Quantity = order.Quantity,
+                OrderDate = order.OrderDate,
+                TotalPrice = order.TotalPrice
+            };
+
+            return View(orderDTO);
         }
 
         [HttpPost]
-        public ActionResult Edit(Order order)
+        [ActionName("Delete")]
+        public ActionResult DeleteConfirm(int? id)
         {
-            ModelState.Remove("Customer");
-            ModelState.Remove("Product");
-
-            if (ModelState.IsValid)
+            if (id == null)
             {
-                _db.Orders.Update(order);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                return NotFound();
             }
 
-            ViewBag.CustomerList = new SelectList(_db.Customers.ToList(), "Id", "CustomerName");
-            ViewBag.ProductList = new SelectList(_db.Products.ToList(), "Id", "ProductName");
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(order);
-        }
-
-        //Delete--------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Delete(int Id)
-        {
-            var order = _db.Orders
-                .Include(x => x.Customer)
-                .Include(x => x.Product)
-                .FirstOrDefault(x => x.Id == Id);
+            var order = _db.Orders.Find(id);
             if (order == null)
             {
                 return NotFound();
             }
-            return View(order);
-        }
 
-        [HttpPost]
-        public ActionResult Delete(Order order)
-        {
-            var existingOrder = _db.Orders.Find(order.Id);
-            _db.Orders.Remove(existingOrder);
+            _db.Orders.Remove(order);
             _db.SaveChanges();
+
             return RedirectToAction("Index");
         }
+
     }
 }

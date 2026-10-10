@@ -1,50 +1,65 @@
-﻿@model Order
+﻿@using BootCamp_MVC_EF.Dtos
+@model OrderCreateDto
+
 @{
-    ViewData["Title"] = "Create Order";
+    ViewData["Title"] = "Create";
 }
-<div class="container">
-    <h1>Create Order</h1>
-    <form asp-action="Create" method="post">
-        <div class="text-danger" asp-validation-summary="All"></div>
 
-        <div class="form-group">
-            <label>Customer</label>
-            <select asp-for="CustomerId" class="form-control" asp-items="ViewBag.CustomerList">
-                <option value="">-- اختر العميل --</option>
-            </select>
-            <span class="text-danger" asp-validation-for="CustomerId"></span>
-        </div>
+<h1>Create</h1>
 
-        <div class="form-group">
-            <label>Product</label>
-            <select asp-for="ProductId" class="form-control" asp-items="ViewBag.ProductList">
-                <option value="">-- اختر المنتج --</option>
-            </select>
-            <span class="text-danger" asp-validation-for="ProductId"></span>
-        </div>
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <div class="form-group">
-            <label asp-for="Quantity" class="control-label"></label>
-            <input asp-for="Quantity" class="form-control" />
-            <span class="text-danger" asp-validation-for="Quantity"></span>
-        </div>
+            <div class="form-group">
+                <label asp-for="CustomerId" class="control-label"></label>
+                <select asp-for="CustomerId" class="form-control" asp-items="ViewBag.Customers">
+                    <option value="">-- Select Customer --</option>
 
-        <div class="form-group">
-            <label asp-for="OrderDate" class="control-label"></label>
-            <input asp-for="OrderDate" class="form-control" type="date" />
-        </div>
 
-        <div class="form-group">
-            <label asp-for="TotalPrice" class="control-label"></label>
-            <input asp-for="TotalPrice" class="form-control" />
-        </div>
+                </select>
+                <span asp-validation-for="CustomerId" class="text-danger"></span>
+            </div>
 
-        <div class="form-group">
-            <input type="submit" value="Create" class="btn btn-primary" />
-        </div>
-    </form>
-    <div><a asp-action="Index">Back to List</a></div>
+            <div class="form-group">
+                <label asp-for="ProductId" class="control-label"></label>
+                <select asp-for="ProductId" class="form-control" asp-items="ViewBag.Products">
+                    <option value="">-- Select Product --</option>
+
+
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Quantity" class="control-label"></label>
+                <input asp-for="Quantity" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="OrderDate" class="control-label"></label>
+                <input asp-for="OrderDate" class="form-control" type="date" />
+                <span asp-validation-for="OrderDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="TotalPrice" class="control-label"></label>
+                <input asp-for="TotalPrice" class="form-control" />
+                <span asp-validation-for="TotalPrice" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
 </div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

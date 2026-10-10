@@ -22,6 +22,7 @@ namespace BootCamp_MVC_EF.Models
 
         [DisplayName("Customer Type")]
         public string CustomerType { get; set; } = "";
+        public ICollection<Order> Orders { get; set; } 
     }
 
 

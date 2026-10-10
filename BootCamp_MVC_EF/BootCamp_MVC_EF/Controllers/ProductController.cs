@@ -10,7 +10,7 @@ namespace BootCamp_MVC_EF.Controllers
     [Authorize]
     public class ProductController : Controller
     {
-        //DI
+
         private readonly AppDbContext _db;
         public ProductController(AppDbContext db)
         {
@@ -20,11 +20,11 @@ namespace BootCamp_MVC_EF.Controllers
 
         public ActionResult Index()
         {
-            //Entity Framework Approach
+
 
             IEnumerable<ProductDto> products = _db.Products.Select(p => new ProductDto
             {
-                //Mapping the properties of Product to ProductDto
+
                 Id = p.Id,
                 ProductName = p.ProductName,
                 Type = p.Type,
@@ -52,7 +52,6 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            //Mapping the properties of Product to ProductUpdateDto
             var productDTO = new ProductUpdateDto
             {
                 Id = product.Id,
@@ -78,7 +77,6 @@ namespace BootCamp_MVC_EF.Controllers
                     return NotFound();
                 }
 
-                //Mapping the properties of ProductUpdateDto to Product
                 product.ProductName = productDTO.ProductName;
                 product.Type = productDTO.Type;
                 product.PowerWatt = productDTO.PowerWatt;
@@ -86,7 +84,7 @@ namespace BootCamp_MVC_EF.Controllers
                 product.StockQuantity = productDTO.StockQuantity;
                 product.SupplierId = productDTO.SupplierId;
 
-                //  _db.Products.Update(product);
+
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
@@ -117,7 +115,6 @@ namespace BootCamp_MVC_EF.Controllers
             if (ModelState.IsValid)
             {
 
-                //Mapping the properties of ProductCreateDto to Product
                 var product = new Product
                 {
                     ProductName = productDTO.ProductName,
@@ -153,7 +150,6 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            //Mapping the properties of Product to ProductUpdateDto
             var productDTO = new ProductUpdateDto
             {
                 Id = product.Id,

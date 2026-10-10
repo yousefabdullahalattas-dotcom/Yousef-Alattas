@@ -1,51 +1,74 @@
-﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Models;
+using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
     [Authorize]
     public class UsersController : Controller
     {
-        private readonly AppDbContext _db;
-        public UsersController(AppDbContext db)
+        private readonly IUserRepository _userRepository;
+
+        public UsersController(IUserRepository userRepository)
         {
-            _db = db;
+            _userRepository = userRepository;
         }
 
-        public ActionResult Index()
+
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<User> users = _db.Users.ToList();
-            return View(users);
+            return View(await _userRepository.GetAllUsersAsync());
         }
 
-        [HttpGet]
-        public ActionResult Create()
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return View(user);
+        }
+
+
+        public IActionResult Create()
         {
             return View();
         }
 
+
         [HttpPost]
-        public ActionResult Create(User user)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,Name,Email,Password,IsLocked")] User user)
         {
             if (ModelState.IsValid)
             {
+  
                 user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
 
-                _db.Users.Add(user);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                await _userRepository.AddUserAsync(user);
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(user);
         }
 
-        //Edit---------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Edit(int Id)
+
+        public async Task<IActionResult> Edit(int? id)
         {
-            var user = _db.Users.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
             if (user == null)
             {
                 return NotFound();
@@ -53,48 +76,79 @@ namespace BootCamp_MVC_EF.Controllers
             return View(user);
         }
 
+
         [HttpPost]
-        public ActionResult Edit(User user)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, [Bind("Id,Name,Email,Password,IsLocked")] User user)
         {
+            if (id != user.Id)
+            {
+                return NotFound();
+            }
+
+
+            ModelState.Remove("Password");
+
             if (ModelState.IsValid)
             {
-                var oldUser = _db.Users.Find(user.Id);
-
-                if (!string.IsNullOrEmpty(user.Password))
+                try
                 {
-                    oldUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                    var oldUser = await _userRepository.GetUserByIdAsync(user.Id);
+                    if (oldUser == null)
+                    {
+                        return NotFound();
+                    }
+
+                    oldUser.Name = user.Name;
+                    oldUser.Email = user.Email;
+                    oldUser.IsLocked = user.IsLocked;
+
+
+                    if (!string.IsNullOrEmpty(user.Password))
+                    {
+                        oldUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                    }
+
+                    await _userRepository.UpdateUserAsync(oldUser);
                 }
+                catch (DbUpdateConcurrencyException)
+                {
 
-                oldUser.Name = user.Name;
-                oldUser.Email = user.Email;
-                oldUser.IsLocked = user.IsLocked;
-
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                }
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(user);
         }
 
-        //Delete-------------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Delete(int Id)
+
+        public async Task<IActionResult> Delete(int? id)
         {
-            var user = _db.Users.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
             if (user == null)
             {
                 return NotFound();
             }
+
             return View(user);
         }
 
-        [HttpPost]
-        public ActionResult Delete(User user)
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int? id)
         {
-            var existingUser = _db.Users.Find(user.Id);
-            _db.Users.Remove(existingUser);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
+            if (user != null)
+            {
+                await _userRepository.DeleteUserAsync(user.Id);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
+
     }
 }

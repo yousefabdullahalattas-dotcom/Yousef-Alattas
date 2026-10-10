@@ -16,15 +16,35 @@ namespace BootCamp_MVC_EF.Controllers
             _supplierRepository = supplierRepository;
         }
 
+
         public async Task<IActionResult> Index()
         {
             return View(await _supplierRepository.GetAllSuppliersAsync());
         }
 
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            return View(supplier);
+        }
+
+
         public IActionResult Create()
         {
             return View();
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -38,6 +58,7 @@ namespace BootCamp_MVC_EF.Controllers
             return View(supplier);
         }
 
+  
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -51,6 +72,7 @@ namespace BootCamp_MVC_EF.Controllers
             }
             return View(supplier);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -76,7 +98,7 @@ namespace BootCamp_MVC_EF.Controllers
             return View(supplier);
         }
 
-        // GET: SUPPLIERS/Delete/5
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -91,6 +113,7 @@ namespace BootCamp_MVC_EF.Controllers
 
             return View(supplier);
         }
+
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]

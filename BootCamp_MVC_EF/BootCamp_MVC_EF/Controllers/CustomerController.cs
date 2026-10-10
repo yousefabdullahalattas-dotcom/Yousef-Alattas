@@ -1,48 +1,69 @@
-﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Models;
+using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
     [Authorize]
     public class CustomerController : Controller
     {
-        private readonly AppDbContext _db;
-        public CustomerController(AppDbContext db)
+        private readonly ICustomerRepository _customerRepository;
+
+        public CustomerController(ICustomerRepository customerRepository)
         {
-            _db = db;
+            _customerRepository = customerRepository;
         }
 
-        public ActionResult Index()
+   
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<Customer> customers = _db.Customers.ToList();
-            return View(customers);
+            return View(await _customerRepository.GetAllCustomersAsync());
         }
 
-        [HttpGet]
-        public ActionResult Create()
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            return View(customer);
+        }
+
+        public IActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
-        public ActionResult Create(Customer customer)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,CustomerName,Phone,Address,CustomerType")] Customer customer)
         {
             if (ModelState.IsValid)
             {
-                _db.Customers.Add(customer);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                await _customerRepository.AddCustomerAsync(customer);
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(customer);
         }
-        //Edit--------------------------------------------------------------------------------------------------------------------------
-        [HttpGet]
-        public ActionResult Edit(int Id)
+
+
+        public async Task<IActionResult> Edit(int? id)
         {
-            var customer = _db.Customers.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
             if (customer == null)
             {
                 return NotFound();
@@ -50,37 +71,60 @@ namespace BootCamp_MVC_EF.Controllers
             return View(customer);
         }
 
+
         [HttpPost]
-        public ActionResult Edit(Customer customer)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int? id, [Bind("Id,CustomerName,Phone,Address,CustomerType")] Customer customer)
         {
+            if (id != customer.Id)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
-                _db.Customers.Update(customer);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                try
+                {
+                    await _customerRepository.UpdateCustomerAsync(customer);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+
+                }
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
             return View(customer);
         }
-        //Delete---------------------------------------------------------------------------------------------------------------------------------
 
-        [HttpGet]
-        public ActionResult Delete(int Id)
+    
+        public async Task<IActionResult> Delete(int? id)
         {
-            var customer = _db.Customers.Find(Id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
             if (customer == null)
             {
                 return NotFound();
             }
+
             return View(customer);
         }
 
-        [HttpPost]
-        public ActionResult Delete(Customer customer)
+ 
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int? id)
         {
-            _db.Customers.Remove(customer);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+            if (customer != null)
+            {
+                await _customerRepository.DeleteCustomerAsync(customer.Id);
+            }
+
+            return RedirectToAction(nameof(Index));
         }
+
     }
 }
