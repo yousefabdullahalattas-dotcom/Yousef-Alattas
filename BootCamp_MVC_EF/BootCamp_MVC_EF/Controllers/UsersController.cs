@@ -1,8 +1,8 @@
-﻿using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Dtos;
+using BootCamp_MVC_EF.Models;
 using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
@@ -23,20 +23,58 @@ namespace BootCamp_MVC_EF.Controllers
         }
 
 
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
 
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
             if (user == null)
             {
                 return NotFound();
             }
 
-            return View(user);
+            var userDTO = new UserUpdateDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsLocked = user.IsLocked
+            };
+
+            return View(userDTO);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(UserUpdateDto userDTO)
+        {
+            ModelState.Remove("Password");
+
+            if (ModelState.IsValid)
+            {
+                var user = await _userRepository.GetUserByIdAsync(userDTO.Id);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+
+                user.Name = userDTO.Name;
+                user.Email = userDTO.Email;
+                user.IsLocked = userDTO.IsLocked;
+
+                if (!string.IsNullOrEmpty(userDTO.Password))
+                {
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(userDTO.Password);
+                }
+
+                await _userRepository.UpdateUserAsync(user);
+                return RedirectToAction("Index");
+            }
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(userDTO);
+
         }
 
 
@@ -45,80 +83,28 @@ namespace BootCamp_MVC_EF.Controllers
             return View();
         }
 
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Email,Password,IsLocked")] User user)
+        public async Task<IActionResult> Create(UserCreateDto userDTO)
         {
             if (ModelState.IsValid)
             {
-  
-                user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+                var user = new User
+                {
+                    Name = userDTO.Name,
+                    Email = userDTO.Email,
+                    Password = BCrypt.Net.BCrypt.HashPassword(userDTO.Password),
+                    IsLocked = userDTO.IsLocked
+                };
 
                 await _userRepository.AddUserAsync(user);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
-            return View(user);
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(userDTO);
+
         }
 
-
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
-        }
-
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Id,Name,Email,Password,IsLocked")] User user)
-        {
-            if (id != user.Id)
-            {
-                return NotFound();
-            }
-
-
-            ModelState.Remove("Password");
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    var oldUser = await _userRepository.GetUserByIdAsync(user.Id);
-                    if (oldUser == null)
-                    {
-                        return NotFound();
-                    }
-
-                    oldUser.Name = user.Name;
-                    oldUser.Email = user.Email;
-                    oldUser.IsLocked = user.IsLocked;
-
-
-                    if (!string.IsNullOrEmpty(user.Password))
-                    {
-                        oldUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
-                    }
-
-                    await _userRepository.UpdateUserAsync(oldUser);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(user);
-        }
 
 
         public async Task<IActionResult> Delete(int? id)
@@ -127,27 +113,42 @@ namespace BootCamp_MVC_EF.Controllers
             {
                 return NotFound();
             }
+
             var user = await _userRepository.GetUserByIdAsync(id.Value);
             if (user == null)
             {
                 return NotFound();
             }
 
-            return View(user);
+            var userDTO = new UserUpdateDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsLocked = user.IsLocked
+            };
+
+            return View(userDTO);
         }
 
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        [HttpPost]
+        [ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirm(int? id)
         {
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
-            if (user != null)
+            if (id == null)
             {
-                await _userRepository.DeleteUserAsync(user.Id);
+                return NotFound();
             }
 
-            return RedirectToAction(nameof(Index));
+            var user = await _userRepository.GetUserByIdAsync(id.Value);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            await _userRepository.DeleteUserAsync(user.Id);
+
+            return RedirectToAction("Index");
         }
 
     }

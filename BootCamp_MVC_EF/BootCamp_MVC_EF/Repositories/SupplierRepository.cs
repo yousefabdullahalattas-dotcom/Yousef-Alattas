@@ -1,4 +1,5 @@
 ﻿using BootCamp_MVC_EF.Data;
+using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,9 +33,15 @@ namespace BootCamp_MVC_EF.Repositories
 
             return Task.CompletedTask;
         }
-        public async Task<IEnumerable<Supplier>> GetAllSuppliersAsync()
+        public async Task<IEnumerable<SupplierDto>> GetAllSuppliersAsync()
         {
-            IEnumerable<Supplier> suppliers = await _context.Suppliers.ToListAsync();
+            IEnumerable<SupplierDto> suppliers = await _context.Suppliers.Select(s => new SupplierDto
+            {
+                Id = s.Id,
+                SupplierName = s.SupplierName,
+                MaterialType = s.MaterialType,
+                Phone = s.Phone
+            }).ToListAsync();
             return suppliers;
         }
         public async Task<Supplier> GetSupplierByIdAsync(int id)

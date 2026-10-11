@@ -1,10 +1,11 @@
-﻿using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Dtos;
+using BootCamp_MVC_EF.Models;
 
 namespace BootCamp_MVC_EF.Repositories
 {
     public interface IUserRepository
     {
-        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
         Task<User> GetUserByIdAsync(int id);
         Task AddUserAsync(User user);
         Task UpdateUserAsync(User user);

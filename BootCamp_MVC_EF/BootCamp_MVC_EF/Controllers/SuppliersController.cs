@@ -1,8 +1,8 @@
-﻿using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Dtos;
+using BootCamp_MVC_EF.Models;
 using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
@@ -23,20 +23,51 @@ namespace BootCamp_MVC_EF.Controllers
         }
 
 
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
 
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
             if (supplier == null)
             {
                 return NotFound();
             }
 
-            return View(supplier);
+            var supplierDTO = new SupplierUpdateDto
+            {
+                Id = supplier.Id,
+                SupplierName = supplier.SupplierName,
+                MaterialType = supplier.MaterialType,
+                Phone = supplier.Phone
+            };
+
+            return View(supplierDTO);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(SupplierUpdateDto supplierDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                var supplier = await _supplierRepository.GetSupplierByIdAsync(supplierDTO.Id);
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                supplier.SupplierName = supplierDTO.SupplierName;
+                supplier.MaterialType = supplierDTO.MaterialType;
+                supplier.Phone = supplierDTO.Phone;
+
+                await _supplierRepository.UpdateSupplierAsync(supplier);
+                return RedirectToAction("Index");
+            }
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(supplierDTO);
+
         }
 
 
@@ -45,58 +76,27 @@ namespace BootCamp_MVC_EF.Controllers
             return View();
         }
 
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,SupplierName,MaterialType,Phone,Products")] Supplier supplier)
+        public async Task<IActionResult> Create(SupplierCreateDto supplierDTO)
         {
             if (ModelState.IsValid)
             {
+
+                var supplier = new Supplier
+                {
+                    SupplierName = supplierDTO.SupplierName,
+                    MaterialType = supplierDTO.MaterialType,
+                    Phone = supplierDTO.Phone
+                };
+
                 await _supplierRepository.AddSupplierAsync(supplier);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
-            return View(supplier);
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(supplierDTO);
+
         }
 
-  
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
-            if (supplier == null)
-            {
-                return NotFound();
-            }
-            return View(supplier);
-        }
-
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Id,SupplierName,MaterialType,Phone,Products")] Supplier supplier)
-        {
-            if (id != supplier.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    await _supplierRepository.UpdateSupplierAsync(supplier);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(supplier);
-        }
 
 
         public async Task<IActionResult> Delete(int? id)
@@ -105,27 +105,42 @@ namespace BootCamp_MVC_EF.Controllers
             {
                 return NotFound();
             }
+
             var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
             if (supplier == null)
             {
                 return NotFound();
             }
 
-            return View(supplier);
+            var supplierDTO = new SupplierUpdateDto
+            {
+                Id = supplier.Id,
+                SupplierName = supplier.SupplierName,
+                MaterialType = supplier.MaterialType,
+                Phone = supplier.Phone
+            };
+
+            return View(supplierDTO);
         }
 
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        [HttpPost]
+        [ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirm(int? id)
         {
-            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
-            if (supplier != null)
+            if (id == null)
             {
-                await _supplierRepository.DeleteSupplierAsync(supplier.Id);
+                return NotFound();
             }
 
-            return RedirectToAction(nameof(Index));
+            var supplier = await _supplierRepository.GetSupplierByIdAsync(id.Value);
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            await _supplierRepository.DeleteSupplierAsync(supplier.Id);
+
+            return RedirectToAction("Index");
         }
 
     }

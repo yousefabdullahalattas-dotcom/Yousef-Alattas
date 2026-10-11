@@ -1,8 +1,8 @@
-﻿using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Dtos;
+using BootCamp_MVC_EF.Models;
 using BootCamp_MVC_EF.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace BootCamp_MVC_EF.Controllers
 {
@@ -16,44 +16,10 @@ namespace BootCamp_MVC_EF.Controllers
             _customerRepository = customerRepository;
         }
 
-   
+
         public async Task<IActionResult> Index()
         {
             return View(await _customerRepository.GetAllCustomersAsync());
-        }
-
-
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
-
-            if (customer == null)
-            {
-                return NotFound();
-            }
-
-            return View(customer);
-        }
-
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CustomerName,Phone,Address,CustomerType")] Customer customer)
-        {
-            if (ModelState.IsValid)
-            {
-                await _customerRepository.AddCustomerAsync(customer);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(customer);
         }
 
 
@@ -63,67 +29,122 @@ namespace BootCamp_MVC_EF.Controllers
             {
                 return NotFound();
             }
+
             var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
             if (customer == null)
             {
                 return NotFound();
             }
-            return View(customer);
-        }
 
+            var customerDTO = new CustomerUpdateDto
+            {
+                Id = customer.Id,
+                CustomerName = customer.CustomerName,
+                Phone = customer.Phone,
+                Address = customer.Address,
+                CustomerType = customer.CustomerType
+            };
+
+            return View(customerDTO);
+        }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, [Bind("Id,CustomerName,Phone,Address,CustomerType")] Customer customer)
+        public async Task<IActionResult> Edit(CustomerUpdateDto customerDTO)
         {
-            if (id != customer.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
-                try
+                var customer = await _customerRepository.GetCustomerByIdAsync(customerDTO.Id);
+                if (customer == null)
                 {
-                    await _customerRepository.UpdateCustomerAsync(customer);
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
-                {
 
-                }
-                return RedirectToAction(nameof(Index));
+                customer.CustomerName = customerDTO.CustomerName;
+                customer.Phone = customerDTO.Phone;
+                customer.Address = customerDTO.Address;
+                customer.CustomerType = customerDTO.CustomerType;
+
+                await _customerRepository.UpdateCustomerAsync(customer);
+                return RedirectToAction("Index");
             }
-            return View(customer);
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(customerDTO);
+
         }
 
-    
+
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(CustomerCreateDto customerDTO)
+        {
+            if (ModelState.IsValid)
+            {
+
+                var customer = new Customer
+                {
+                    CustomerName = customerDTO.CustomerName,
+                    Phone = customerDTO.Phone,
+                    Address = customerDTO.Address,
+                    CustomerType = customerDTO.CustomerType
+                };
+
+                await _customerRepository.AddCustomerAsync(customer);
+                return RedirectToAction("Index");
+            }
+            ModelState.AddModelError("", "Please fill all the required fields.");
+            return View(customerDTO);
+
+        }
+
+
+
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
+
             var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
             if (customer == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            var customerDTO = new CustomerUpdateDto
+            {
+                Id = customer.Id,
+                CustomerName = customer.CustomerName,
+                Phone = customer.Phone,
+                Address = customer.Address,
+                CustomerType = customer.CustomerType
+            };
+
+            return View(customerDTO);
         }
 
- 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int? id)
+        [HttpPost]
+        [ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirm(int? id)
         {
-            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
-            if (customer != null)
+            if (id == null)
             {
-                await _customerRepository.DeleteCustomerAsync(customer.Id);
+                return NotFound();
             }
 
-            return RedirectToAction(nameof(Index));
+            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            await _customerRepository.DeleteCustomerAsync(customer.Id);
+
+            return RedirectToAction("Index");
         }
 
     }
