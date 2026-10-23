@@ -14,7 +14,7 @@ class SignupScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sign Up'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -28,7 +28,7 @@ class SignupScreen extends StatelessWidget {
                   'Create New Account',
                   style: TextStyle(
                     fontSize: 24,
-                    color: Colors.purple,
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

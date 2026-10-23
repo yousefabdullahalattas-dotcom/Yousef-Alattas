@@ -11,14 +11,14 @@ class HomeScreen extends StatelessWidget {
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: const Text('Home'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.blue,
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            colors: [Colors.deepPurple, Colors.black26],
+            colors: [Colors.blue, Colors.black26],
             radius: 0.9,
           ),
         ),
@@ -34,7 +34,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Container(
-        color: Colors.deepPurple,
+        color: Colors.blue,
         height: 80,
       ),
     );

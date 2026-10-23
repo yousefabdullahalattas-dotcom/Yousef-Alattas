@@ -17,10 +17,10 @@ class AppDrawer extends StatelessWidget {
               backgroundColor: Colors.white,
               child: Text(
                 'Y',
-                style: TextStyle(fontSize: 24, color: Colors.deepPurple),
+                style: TextStyle(fontSize: 24, color: Colors.blue),
               ),
             ),
-            decoration: BoxDecoration(color: Colors.deepPurple),
+            decoration: BoxDecoration(color: Colors.blue),
           ),
 
           ListTile(
