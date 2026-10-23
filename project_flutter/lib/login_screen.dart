@@ -68,7 +68,7 @@ class LoginScreen extends StatelessWidget {
                       child: const Text(
                         'Sign Up',
                         style: TextStyle(
-                          color: Colors.purple,
+                          color: Colors.blue,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -81,7 +81,7 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: Container(
-        color: Colors.deepPurple,
+        color: Colors.blue,
         height: 60,
       ),
     );
