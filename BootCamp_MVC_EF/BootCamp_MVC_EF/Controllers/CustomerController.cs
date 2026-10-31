@@ -1,6 +1,5 @@
 ﻿using BootCamp_MVC_EF.Dtos;
-using BootCamp_MVC_EF.Models;
-using BootCamp_MVC_EF.Repositories;
+using BootCamp_MVC_EF.Services.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,17 +8,40 @@ namespace BootCamp_MVC_EF.Controllers
     [Authorize]
     public class CustomerController : Controller
     {
-        private readonly ICustomerRepository _customerRepository;
+        private readonly ICustomerService _customerService;
 
-        public CustomerController(ICustomerRepository customerRepository)
+        public CustomerController(ICustomerService customerService)
         {
-            _customerRepository = customerRepository;
+            _customerService = customerService;
+        }
+
+   
+        public async Task<IActionResult> Index()
+        {
+            var customers = await _customerService.GetAllCustomers();
+
+            return View(customers);
         }
 
 
-        public async Task<IActionResult> Index()
+        public IActionResult Create()
         {
-            return View(await _customerRepository.GetAllCustomersAsync());
+            return View(new CustomerCreateDto());
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CustomerCreateDto customerDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                await _customerService.AddCustomer(customerDTO);
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(customerDTO);
         }
 
 
@@ -30,76 +52,38 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+            var customer = await _customerService.GetCustomerById(id.Value);
+
             if (customer == null)
             {
                 return NotFound();
             }
 
-            var customerDTO = new CustomerUpdateDto
-            {
-                Id = customer.Id,
-                CustomerName = customer.CustomerName,
-                Phone = customer.Phone,
-                Address = customer.Address,
-                CustomerType = customer.CustomerType
-            };
-
-            return View(customerDTO);
+            return View(customer);
         }
 
+   
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CustomerUpdateDto customerDTO)
         {
             if (ModelState.IsValid)
             {
-                var customer = await _customerRepository.GetCustomerByIdAsync(customerDTO.Id);
-                if (customer == null)
+                var existingCustomer =
+                    await _customerService.GetCustomerById(customerDTO.Id);
+
+                if (existingCustomer == null)
                 {
                     return NotFound();
                 }
 
-                customer.CustomerName = customerDTO.CustomerName;
-                customer.Phone = customerDTO.Phone;
-                customer.Address = customerDTO.Address;
-                customer.CustomerType = customerDTO.CustomerType;
+                await _customerService.UpdateCustomer(customerDTO);
 
-                await _customerRepository.UpdateCustomerAsync(customer);
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
+
             return View(customerDTO);
-
         }
-
-
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(CustomerCreateDto customerDTO)
-        {
-            if (ModelState.IsValid)
-            {
-
-                var customer = new Customer
-                {
-                    CustomerName = customerDTO.CustomerName,
-                    Phone = customerDTO.Phone,
-                    Address = customerDTO.Address,
-                    CustomerType = customerDTO.CustomerType
-                };
-
-                await _customerRepository.AddCustomerAsync(customer);
-                return RedirectToAction("Index");
-            }
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(customerDTO);
-
-        }
-
 
 
         public async Task<IActionResult> Delete(int? id)
@@ -109,26 +93,20 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+            var customer = await _customerService.GetCustomerById(id.Value);
+
             if (customer == null)
             {
                 return NotFound();
             }
 
-            var customerDTO = new CustomerUpdateDto
-            {
-                Id = customer.Id,
-                CustomerName = customer.CustomerName,
-                Phone = customer.Phone,
-                Address = customer.Address,
-                CustomerType = customer.CustomerType
-            };
-
-            return View(customerDTO);
+            return View(customer);
         }
+
 
         [HttpPost]
         [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirm(int? id)
         {
             if (id == null)
@@ -136,16 +114,16 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var customer = await _customerRepository.GetCustomerByIdAsync(id.Value);
+            var customer = await _customerService.GetCustomerById(id.Value);
+
             if (customer == null)
             {
                 return NotFound();
             }
 
-            await _customerRepository.DeleteCustomerAsync(customer.Id);
+            await _customerService.DeleteCustomer(id.Value);
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
     }
 }

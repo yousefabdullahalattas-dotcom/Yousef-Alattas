@@ -1,5 +1,4 @@
 ﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,6 @@ namespace BootCamp_MVC_EF.Repositories
 {
     public class ProductRepository : IProductRepository
     {
-
         private readonly AppDbContext _context;
 
         public ProductRepository(AppDbContext context)
@@ -15,51 +13,40 @@ namespace BootCamp_MVC_EF.Repositories
             _context = context;
         }
 
-
-        public Task AddProductAsync(Product product)
+        public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            _context.Products.Add(product);
-            return _context.SaveChangesAsync();
+            return await _context.Products
+                .AsNoTracking()
+                .Include(p => p.Supplier)
+                .ToListAsync();
         }
 
-        public Task DeleteProductAsync(int id)
+        public async Task<Product?> GetProductByIdAsync(int id)
         {
-            var product = _context.Products.Find(id);
+            return await _context.Products.FindAsync(id);
+        }
+
+        public async Task AddProductAsync(Product product)
+        {
+            await _context.Products.AddAsync(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateProductAsync(Product product)
+        {
+            _context.Products.Update(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteProductAsync(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+
             if (product != null)
             {
                 _context.Products.Remove(product);
-                return _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
-
-            return Task.CompletedTask;
-        }
-        public async Task<IEnumerable<ProductDto>> GetAllProductsAsync()
-        {
-            IEnumerable<ProductDto> products = await _context.Products.Select(p => new ProductDto
-            {
-                //Mapping the properties of Product to ProductDto
-                Id = p.Id,
-                ProductName = p.ProductName,
-                Type = p.Type,
-                PowerWatt = p.PowerWatt,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                SupplierName = p.Supplier != null ? p.Supplier.SupplierName : null
-            }).ToListAsync();
-            return products;
-        }
-        public async Task<Product> GetProductByIdAsync(int id)
-        {
-            var product = await _context.Products.FindAsync(id);
-            return product;
-
-
-        }
-        public Task UpdateProductAsync(Product product)
-        {
-            _context.Products.Update(product);
-            return _context.SaveChangesAsync();
-
         }
     }
 }

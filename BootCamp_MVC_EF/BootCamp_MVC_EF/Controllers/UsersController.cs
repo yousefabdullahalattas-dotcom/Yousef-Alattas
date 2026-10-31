@@ -1,6 +1,6 @@
 ﻿using BootCamp_MVC_EF.Dtos;
-using BootCamp_MVC_EF.Models;
-using BootCamp_MVC_EF.Repositories;
+using BootCamp_MVC_EF.Services;
+using BootCamp_MVC_EF.Services.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,19 +9,40 @@ namespace BootCamp_MVC_EF.Controllers
     [Authorize]
     public class UsersController : Controller
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUserService _userService;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserService userService)
         {
-            _userRepository = userRepository;
+            _userService = userService;
         }
 
-
+        // INDEX
         public async Task<IActionResult> Index()
         {
-            return View(await _userRepository.GetAllUsersAsync());
+            var users = await _userService.GetAllUsers();
+
+            return View(users);
         }
 
+        public IActionResult Create()
+        {
+            return View(new UserCreateDto());
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(UserCreateDto userDTO)
+        {
+            if (ModelState.IsValid)
+            {
+                await _userService.AddUser(userDTO);
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(userDTO);
+        }
 
         public async Task<IActionResult> Edit(int? id)
         {
@@ -30,82 +51,39 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
+            var user = await _userService.GetUserById(id.Value);
+
             if (user == null)
             {
                 return NotFound();
             }
 
-            var userDTO = new UserUpdateDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                IsLocked = user.IsLocked
-            };
-
-            return View(userDTO);
+            return View(user);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UserUpdateDto userDTO)
         {
             ModelState.Remove("Password");
 
             if (ModelState.IsValid)
             {
-                var user = await _userRepository.GetUserByIdAsync(userDTO.Id);
-                if (user == null)
+                var existingUser =
+                    await _userService.GetUserById(userDTO.Id);
+
+                if (existingUser == null)
                 {
                     return NotFound();
                 }
 
-                user.Name = userDTO.Name;
-                user.Email = userDTO.Email;
-                user.IsLocked = userDTO.IsLocked;
+                await _userService.UpdateUser(userDTO);
 
-                if (!string.IsNullOrEmpty(userDTO.Password))
-                {
-                    user.Password = BCrypt.Net.BCrypt.HashPassword(userDTO.Password);
-                }
-
-                await _userRepository.UpdateUserAsync(user);
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
+
             return View(userDTO);
-
         }
-
-
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(UserCreateDto userDTO)
-        {
-            if (ModelState.IsValid)
-            {
-
-                var user = new User
-                {
-                    Name = userDTO.Name,
-                    Email = userDTO.Email,
-                    Password = BCrypt.Net.BCrypt.HashPassword(userDTO.Password),
-                    IsLocked = userDTO.IsLocked
-                };
-
-                await _userRepository.AddUserAsync(user);
-                return RedirectToAction("Index");
-            }
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            return View(userDTO);
-
-        }
-
-
 
         public async Task<IActionResult> Delete(int? id)
         {
@@ -114,25 +92,20 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
+            var user = await _userService.GetUserById(id.Value);
+
             if (user == null)
             {
                 return NotFound();
             }
 
-            var userDTO = new UserUpdateDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                IsLocked = user.IsLocked
-            };
-
-            return View(userDTO);
+            return View(user);
         }
+
 
         [HttpPost]
         [ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirm(int? id)
         {
             if (id == null)
@@ -140,16 +113,16 @@ namespace BootCamp_MVC_EF.Controllers
                 return NotFound();
             }
 
-            var user = await _userRepository.GetUserByIdAsync(id.Value);
+            var user = await _userService.GetUserById(id.Value);
+
             if (user == null)
             {
                 return NotFound();
             }
 
-            await _userRepository.DeleteUserAsync(user.Id);
+            await _userService.DeleteUser(id.Value);
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
     }
 }

@@ -1,3 +1,7 @@
 <Solution>
+  <Project Path="BootCamp_MVC_EF.API/BootCamp_MVC_EF.API.csproj" Id="49336856-9466-41b1-b7d6-37a5bf05b87b" />
+  <Project Path="BootCamp_MVC_EF.Application/BootCamp_MVC_EF.Application.csproj" Id="f74d2f3f-8476-429d-aa2f-75a93fe0b9cb" />
+  <Project Path="BootCamp_MVC_EF.Domain/BootCamp_MVC_EF.Domain.csproj" Id="ad1f5b33-82e1-44aa-90b1-98ca6eff6092" />
+  <Project Path="BootCamp_MVC_EF.Infrastructure/BootCamp_MVC_EF.Infrastructure.csproj" Id="d979634f-a210-48c1-8f55-c0c063ab3bf5" />
   <Project Path="BootCamp_MVC_EF/BootCamp_MVC_EF.csproj" />
 </Solution>

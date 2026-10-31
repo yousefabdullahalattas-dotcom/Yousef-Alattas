@@ -1,5 +1,4 @@
 ﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,6 @@ namespace BootCamp_MVC_EF.Repositories
 {
     public class SupplierRepository : ISupplierRepository
     {
-
         private readonly AppDbContext _context;
 
         public SupplierRepository(AppDbContext context)
@@ -15,47 +13,39 @@ namespace BootCamp_MVC_EF.Repositories
             _context = context;
         }
 
-
-        public Task AddSupplierAsync(Supplier supplier)
+        public async Task<IEnumerable<Supplier>> GetAllSuppliersAsync()
         {
-            _context.Suppliers.Add(supplier);
-            return _context.SaveChangesAsync();
+            return await _context.Suppliers
+                .AsNoTracking()
+                .ToListAsync();
         }
 
-        public Task DeleteSupplierAsync(int id)
+        public async Task<Supplier?> GetSupplierByIdAsync(int id)
         {
-            var supplier = _context.Suppliers.Find(id);
+            return await _context.Suppliers.FindAsync(id);
+        }
+
+        public async Task AddSupplierAsync(Supplier supplier)
+        {
+            await _context.Suppliers.AddAsync(supplier);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateSupplierAsync(Supplier supplier)
+        {
+            _context.Suppliers.Update(supplier);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteSupplierAsync(int id)
+        {
+            var supplier = await _context.Suppliers.FindAsync(id);
+
             if (supplier != null)
             {
                 _context.Suppliers.Remove(supplier);
-                return _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
-
-            return Task.CompletedTask;
-        }
-        public async Task<IEnumerable<SupplierDto>> GetAllSuppliersAsync()
-        {
-            IEnumerable<SupplierDto> suppliers = await _context.Suppliers.Select(s => new SupplierDto
-            {
-                Id = s.Id,
-                SupplierName = s.SupplierName,
-                MaterialType = s.MaterialType,
-                Phone = s.Phone
-            }).ToListAsync();
-            return suppliers;
-        }
-        public async Task<Supplier> GetSupplierByIdAsync(int id)
-        {
-            var supplier = await _context.Suppliers.FindAsync(id);
-            return supplier;
-
-
-        }
-        public Task UpdateSupplierAsync(Supplier supplier)
-        {
-            _context.Suppliers.Update(supplier);
-            return _context.SaveChangesAsync();
-
         }
     }
 }

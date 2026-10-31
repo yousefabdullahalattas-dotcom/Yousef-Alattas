@@ -1,5 +1,4 @@
 ﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Dtos;
 using BootCamp_MVC_EF.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,6 @@ namespace BootCamp_MVC_EF.Repositories
 {
     public class OrderRepository : IOrderRepository
     {
-
         private readonly AppDbContext _context;
 
         public OrderRepository(AppDbContext context)
@@ -15,50 +13,41 @@ namespace BootCamp_MVC_EF.Repositories
             _context = context;
         }
 
-
-        public Task AddOrderAsync(Order order)
+        public async Task<IEnumerable<Order>> GetAllOrdersAsync()
         {
-            _context.Orders.Add(order);
-            return _context.SaveChangesAsync();
+            return await _context.Orders
+                .AsNoTracking()
+                .Include(o => o.Customer)
+                .Include(o => o.Product)
+                .ToListAsync();
         }
 
-        public Task DeleteOrderAsync(int id)
+        public async Task<Order?> GetOrderByIdAsync(int id)
         {
-            var order = _context.Orders.Find(id);
+            return await _context.Orders.FindAsync(id);
+        }
+
+        public async Task AddOrderAsync(Order order)
+        {
+            await _context.Orders.AddAsync(order);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateOrderAsync(Order order)
+        {
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteOrderAsync(int id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+
             if (order != null)
             {
                 _context.Orders.Remove(order);
-                return _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
             }
-
-            return Task.CompletedTask;
-        }
-        public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
-        {
-            IEnumerable<OrderDto> orders = await _context.Orders.Select(o => new OrderDto
-            {
-                //Mapping the properties of Order to OrderDto
-                Id = o.Id,
-                CustomerName = o.Customer != null ? o.Customer.CustomerName : null,
-                ProductName = o.Product != null ? o.Product.ProductName : null,
-                Quantity = o.Quantity,
-                OrderDate = o.OrderDate,
-                TotalPrice = o.TotalPrice
-            }).ToListAsync();
-            return orders;
-        }
-        public async Task<Order> GetOrderByIdAsync(int id)
-        {
-            var order = await _context.Orders.FindAsync(id);
-            return order;
-
-
-        }
-        public Task UpdateOrderAsync(Order order)
-        {
-            _context.Orders.Update(order);
-            return _context.SaveChangesAsync();
-
         }
     }
 }

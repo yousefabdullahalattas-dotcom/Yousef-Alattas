@@ -1,6 +1,5 @@
-﻿using BootCamp_MVC_EF.Data;
-using BootCamp_MVC_EF.Dtos;
-using BootCamp_MVC_EF.Models;
+﻿using BootCamp_MVC_EF.Dtos;
+using BootCamp_MVC_EF.Services.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,180 +9,169 @@ namespace BootCamp_MVC_EF.Controllers
     [Authorize]
     public class ProductController : Controller
     {
+        private readonly IProductService _productService;
 
-        private readonly AppDbContext _db;
-        public ProductController(AppDbContext db)
+        public ProductController(IProductService productService)
         {
-            _db = db;
+            _productService = productService;
         }
 
-
-        public ActionResult Index()
+        public async Task<IActionResult> Index()
         {
-
-
-            IEnumerable<ProductDto> products = _db.Products.Select(p => new ProductDto
-            {
-
-                Id = p.Id,
-                ProductName = p.ProductName,
-                Type = p.Type,
-                PowerWatt = p.PowerWatt,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
-                SupplierName = p.Supplier != null ? p.Supplier.SupplierName : null
-            }).ToList();
+            var products = await _productService.GetAllProducts();
 
             return View(products);
         }
 
+        public async Task<IActionResult> Create()
+        {
+            await LoadSuppliersAsync();
 
-        public ActionResult Edit(int? id)
+            return View(new ProductCreateDto());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductCreateDto productDTO, IFormFile? image)
+        {
+            if (ModelState.IsValid)
+            {
+                if (image != null)
+                {
+                    productDTO.ImageUrl = UploadImage(image);
+                }
+
+                await _productService.AddProduct(productDTO);
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            await LoadSuppliersAsync();
+
+            return View(productDTO);
+        }
+
+        private string UploadImage(IFormFile file)
+        {
+            string fileName = Guid.NewGuid().ToString()
+                              + Path.GetExtension(file.FileName);
+
+
+            string folderPath = Path.Combine(
+      Directory.GetCurrentDirectory(),
+      "wwwroot",
+      "images",
+      "products"
+    );
+
+            Directory.CreateDirectory(folderPath);
+
+
+            string filePath = Path.Combine(
+          folderPath,
+          fileName);
+
+
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                file.CopyTo(stream);
+            }
+
+            return "/images/products/" + fileName;
+        }
+
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            loadSuppliers();
-            var product = _db.Products.Find(id);
+            var product = await _productService.GetProductById(id.Value);
+
             if (product == null)
             {
                 return NotFound();
             }
 
-            var productDTO = new ProductUpdateDto
-            {
-                Id = product.Id,
-                ProductName = product.ProductName,
-                Type = product.Type,
-                PowerWatt = product.PowerWatt,
-                Price = product.Price,
-                StockQuantity = product.StockQuantity,
-                SupplierId = product.SupplierId
-            };
+            await LoadSuppliersAsync();
 
-            return View(productDTO);
+            return View(product);
         }
 
         [HttpPost]
-        public ActionResult Edit(ProductUpdateDto productDTO)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ProductUpdateDto productDTO)
         {
             if (ModelState.IsValid)
             {
-                var product = _db.Products.Find(productDTO.Id);
-                if (product == null)
+                var existingProduct =
+                    await _productService.GetProductById(productDTO.Id);
+
+                if (existingProduct == null)
                 {
                     return NotFound();
                 }
 
-                product.ProductName = productDTO.ProductName;
-                product.Type = productDTO.Type;
-                product.PowerWatt = productDTO.PowerWatt;
-                product.Price = productDTO.Price;
-                product.StockQuantity = productDTO.StockQuantity;
-                product.SupplierId = productDTO.SupplierId;
+                await _productService.UpdateProduct(productDTO);
 
-
-                _db.SaveChanges();
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            loadSuppliers();
+
+            await LoadSuppliersAsync();
+
             return View(productDTO);
-
         }
 
-
-        private void loadSuppliers()
-        {
-            var suppliers = _db.Suppliers.ToList();
-            ViewBag.Suppliers = new SelectList(suppliers, "Id", "SupplierName");
-        }
-
-
-        public ActionResult Create()
-        {
-            loadSuppliers();
-
-            return View();
-        }
-
-        [HttpPost]
-        public ActionResult Create(ProductCreateDto productDTO)
-        {
-            if (ModelState.IsValid)
-            {
-
-                var product = new Product
-                {
-                    ProductName = productDTO.ProductName,
-                    Type = productDTO.Type,
-                    PowerWatt = productDTO.PowerWatt,
-                    Price = productDTO.Price,
-                    StockQuantity = productDTO.StockQuantity,
-                    SupplierId = productDTO.SupplierId
-                };
-
-                _db.Products.Add(product);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            ModelState.AddModelError("", "Please fill all the required fields.");
-            loadSuppliers();
-            return View(productDTO);
-
-        }
-
-
-
-        public ActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = _db.Products.Find(id);
+            var product = await _productService.GetProductById(id.Value);
+
             if (product == null)
             {
                 return NotFound();
             }
 
-            var productDTO = new ProductUpdateDto
-            {
-                Id = product.Id,
-                ProductName = product.ProductName,
-                Type = product.Type,
-                PowerWatt = product.PowerWatt,
-                Price = product.Price,
-                StockQuantity = product.StockQuantity,
-                SupplierId = product.SupplierId
-            };
-
-            return View(productDTO);
+            return View(product);
         }
 
         [HttpPost]
         [ActionName("Delete")]
-        public ActionResult DeleteConfirm(int? id)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirm(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var product = _db.Products.Find(id);
+            var product = await _productService.GetProductById(id.Value);
+
             if (product == null)
             {
                 return NotFound();
             }
 
-            _db.Products.Remove(product);
-            _db.SaveChanges();
+            await _productService.DeleteProduct(id.Value);
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
 
+        private async Task LoadSuppliersAsync()
+        {
+            var suppliers = await _productService.GetAllSuppliers();
+
+            ViewBag.Suppliers = new SelectList(
+                suppliers,
+                "Id",
+                "SupplierName"
+            );
+        }
     }
 }
